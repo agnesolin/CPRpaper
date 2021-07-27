@@ -203,7 +203,7 @@ plot_names = c(
 #### FIG 5 ####
 
 png(
-  "~/nonSU/CPR/indTAXA.png",
+  "figures/indTAXA.png",
   width = 15,
   height = 20,
   units = 'cm',

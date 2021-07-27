@@ -5,7 +5,7 @@
 
 
 png(
-  "~/nonSU/CPR/medianDRIVER.png",
+  "figures/medianDRIVER.png",
   width = 15,
   height = 20,
   units = 'cm',
@@ -130,7 +130,7 @@ for (i in 1:nrow(cases)) {
     
     geom_point(size = 1) +
     
-    labs(x = "Year", y = expression(paste("Abundance (×1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Abundance (?1000 m" ^ "-3", ")"))) +
     
     theme_bw(base_size = 10) +
     theme(panel.border = 
@@ -204,7 +204,7 @@ for (i in 1:nrow(cases)) {
     
     geom_point(size = 1) +
     
-    labs(x = "Year", y = expression(paste("Abundance (×1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Abundance (?1000 m" ^ "-3", ")"))) +
     
     theme_bw(base_size = 10) +
     theme(panel.border = 
@@ -295,7 +295,7 @@ dev.off()
 # repeat all previous scatterplots for Iceland and Faroes
 
 png(
-  "~/nonSU/CPR/IceFar.png",
+  "figures/IceFar.png",
   width = 15,
   height = 20,
   units = 'cm',
@@ -527,7 +527,7 @@ for (loc in c("Iceland", "Faroes")) {
     scale_shape_manual(values = c(16,17)) +
     scale_color_manual(values=c(col0, col1))+
     
-    labs(x = "Year", y = expression(paste("Small copepods (×1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Small copepods (?1000 m" ^ "-3", ")"))) +
     
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
@@ -574,7 +574,7 @@ dev.off()
 
 
 png(
-  "~/nonSU/CPR/phenSMALLcop.png",
+  "figures/phenSMALLcop.png",
   width = 16,
   height = 8,
   units = 'cm',
@@ -596,7 +596,7 @@ plot(
   pch = 16,
   col = alpha("grey", 0.1),
   xlab = "Day of year",
-  ylab = expression(paste("Small copepods (×1000 m" ^ "-3", ")")),
+  ylab = expression(paste("Small copepods (?1000 m" ^ "-3", ")")),
   cex.lab =  1.2,
   cex.axis = 1.2
 )
@@ -631,7 +631,7 @@ plot(
   pch = 16,
   col = alpha("grey", 0.1),
   xlab = "Day of year",
-  ylab = expression(paste("Small copepods (×1000 m" ^ "-3", ")")),
+  ylab = expression(paste("Small copepods (?1000 m" ^ "-3", ")")),
   cex.lab =  1.2,
   cex.axis = 1.2
 )
@@ -661,7 +661,7 @@ dev.off()
 #### CALANUS PHENOLOGY ####
 
 png(
-  "~/nonSU/CPR/phenCAL.png",
+  "figures/phenCAL.png",
   width = 12,
   height = 6,
   units = 'cm',

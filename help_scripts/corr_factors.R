@@ -3,7 +3,7 @@
 set.seed(1) # for generating boot intervals
 
 #### Stonehaven ####
-source("StonehavenComparison.R")
+source("help_scripts/StonehavenComparison.R")
 
 # list of CPR taxa that have a corresponding group in the CPR dataset
 poss_taxa = taxa[colSums(!is.na(stonehaven_comparison[, taxa])) != 0]
@@ -15,7 +15,7 @@ poss_taxa = taxa[colSums(!is.na(stonehaven_comparison[, taxa])) != 0]
 
 # set up plot
 png(
-  paste0(wd, "/Stonehaven_scale.png"),
+  "figures/Stonehaven_scale.png",
   width = 15,
   height = 20,
   units = 'cm',
@@ -489,7 +489,7 @@ corr_factors_Stonehaven = corr_factors
 
 #### L4 ####
 
-source("L4Comparison.R")
+source("help_scripts/L4Comparison.R")
 
 # list of CPR taxa that have a corresponding group in the L4 dataset
 poss_taxa = taxa[colSums(!is.na(L4_comparison[, taxa])) != 0]
@@ -499,7 +499,7 @@ poss_taxa = poss_taxa[poss_taxa != "Centropages.spp...Unidentified."]
 #### scale of coherence CPR and L4 (as above) ####
 
 png(
-  "~/nonSU/CPR/L4_scale.png",
+  "figures/L4_scale.png",
   width = 15,
   height = 20,
   units = 'cm',

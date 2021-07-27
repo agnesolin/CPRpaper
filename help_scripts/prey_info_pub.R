@@ -6,8 +6,7 @@
 
 #### load empty data frame ####
 
-setwd("~/nonSU/CPR")
-prey_info = read.csv("prey_info_empty.csv", sep = ";")
+prey_info = read.csv("help_scripts/prey_info_empty.csv", sep = ";")
 
 #### add sizes ####
 prey_info$size = c(1.15,
@@ -131,5 +130,5 @@ prey_info$energy = prey_info$energy_density*(prey_info$weight/1000)
 
 
 #### save data ####
-write.csv(prey_info, "prey_info.csv")
+write.csv(prey_info, "data/prey_info.csv")
 

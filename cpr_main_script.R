@@ -4,39 +4,34 @@
 
 # Agnes Olin agnes.olin@su.se
 # 21 July 2021
-# R version 4.0.3
 
 #### initial setup ####
-rm(list = ls())
-wd = "~/nonSU/CPR"
-setwd(wd)
+
+
+library(boot) 
+library(forecast) 
+library(ggplot2) 
+library(ggpubr) 
+library(lubridate) 
+library(mgcv) 
+library(raster) 
+library(rworldmap) 
+library(rworldxtra) 
+library(scales) 
+library(signal) 
+library(sp) 
+library(suncalc) 
+library(viridisLite) 
+
 
 options(scipen = 999)
-
 par(family = "serif")
-
-library(boot) # 1.3-25
-library(forecast) # 8.13
-library(ggplot2) # 3.3.4
-library(ggpubr) # 0.4.0
-library(lubridate) # 1.7.10
-library(mgcv) # 1.8-33
-library(raster) # 3.4-5
-library(rworldmap) # 1.3-6
-library(rworldxtra) # 1.01
-library(scales) # 1.1.1
-library(signal) # 0.7-6
-library(sp) # 1.4-5
-library(suncalc) # 0.5.0
-library(viridisLite) # 0.3.0
-
-
 
 
 #### load and clean up data ####
 
 ## load CPR data ##
-cpr = read.csv("CPR_data_updated.csv", sep = ";")
+cpr = read.csv("data/CPR_data_updated.csv", sep = ";")
 
 # sort out date format
 cpr$Midpoint_Date_Local = as.Date(cpr$Midpoint_Date_Local)
@@ -62,8 +57,8 @@ cpr[, taxa][is.na(cpr[, taxa])] = 0
 
 
 ## load Stonehaven data ##
-stonehaven = read.csv("Stonehaven_zooplankton.csv", sep = ";")
-stonehaven_nauplii = read.csv("Stonehaven_nauplii.csv", sep = ";")
+stonehaven = read.csv("data/Stonehaven_zooplankton.csv", sep = ";")
+stonehaven_nauplii = read.csv("data/Stonehaven_nauplii.csv", sep = ";")
 
 # sort out dates and merge
 names(stonehaven)[1] = "date"
@@ -78,7 +73,7 @@ rm(stonehaven_nauplii)
 
 
 ## load L4 data ##
-L4 = read.csv("L4.csv", sep = ";", fileEncoding = "UTF-8-BOM")
+L4 = read.csv("data/L4.csv", sep = ";", fileEncoding = "UTF-8-BOM")
 
 # sort out date format
 L4$date = as.Date(L4$date)
@@ -122,7 +117,7 @@ end0 = 212
 #### MAP OF SAMPLES (FIG 1) #####
 
 # load locations of sandeel grounds used
-loc_sandeels = read.delim(paste0(wd, "/locations_sandeel.csv"))
+loc_sandeels = read.delim("data/locations_sandeel.csv")
 
 # load location of sampling sites
 stone_lat = 56.97305556
@@ -134,7 +129,7 @@ L4_long = -4.21666667
 
 # set up plot
 png(
-  paste0(wd, "/sample_map.png"),
+  "figures/sample_map.png",
   width = 26,
   height = 13,
   units = 'cm',
@@ -158,8 +153,8 @@ plot(
   xaxt = 'n',
   yaxt = 'n',
   ann = FALSE,
-  xlab = "Longitude (°)",
-  ylab = "Latitude (°)",
+  xlab = "Longitude (?)",
+  ylab = "Latitude (?)",
   cex.lab = 1.6,
   cex.axis = 1.3
 )
@@ -227,8 +222,8 @@ plot(
   xaxt = 'n',
   yaxt = 'n',
   ann = FALSE,
-  xlab = "Longitude (°)",
-  ylab = "Latitude (°)",
+  xlab = "Longitude (?)",
+  ylab = "Latitude (?)",
   cex.lab = 1.6,
   cex.axis = 1.3
 )
@@ -313,8 +308,7 @@ taxa = names(cpr)[7:ncol(cpr)]
 
 
 #### calculate corr factors ####
-source("corr_factors.R")
-
+source("help_scripts/corr_factors.R")
 
 
 #### apply to full CPR dataset ####
@@ -365,10 +359,10 @@ locations = c("DB", "FoF",  "ECG", "Shetland", "Faroes", "Iceland")
 locations_plot_order = locations
 
 # interpolation only during feeding
-source("InterpolationFeeding.R")
+source("help_scripts/InterpolationFeeding.R")
 
 # interpolation during full year
-source("InterpolationFull.R")
+source("help_scripts/InterpolationFull.R")
 
 
 
@@ -379,8 +373,8 @@ source("InterpolationFull.R")
 #### PREP ####
 
 # load prey traits
-source("prey_info_pub.R")
-prey_info = read.csv("prey_info.csv")
+source("help_scripts/prey_info_pub.R")
+prey_info = read.csv("data/prey_info.csv")
 
 
 # sort out format so that taxon names in files match up
@@ -455,21 +449,21 @@ gamRES = data.frame(
 
 #### FIG 2 ####
 
-source("FIG2.R")
+source("help_scripts/FIG2.R")
 
 
 #### FIG 3 ####
 
-source("FIG3.R")
+source("help_scripts/FIG3.R")
 
 #### FIG 4 ####
 
-source("FIG4.R")
+source("help_scripts/FIG4.R")
 
 
 #### FIG 5 ####
 
-source("FIG5.R")
+source("help_scripts/FIG5.R")
 
 
 #### REPORTED QUANTITIES ####
@@ -530,7 +524,7 @@ aggregate(tot$tot, list(tot$loc), FUN = function(x) mean(x, na.rm = T))
 
 
 #### SUPPLEMENTARY FIGURES ####
-source("SuppPlots.R")
+source("help_scripts/SuppPlots.R")
 
 
 

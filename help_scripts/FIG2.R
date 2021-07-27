@@ -51,7 +51,7 @@ all = rbind(age1, age0)
 #### FIG 2 ####
 
 png(
-  "~/nonSU/CPR/EnergyPhenology.png",
+  "figures/EnergyPhenology.png",
   width = 15,
   height = 20,
   units = 'cm',

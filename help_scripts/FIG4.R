@@ -2,7 +2,7 @@
 
 
 png(
-  "~/nonSU/CPR/taxTRENDS.png",
+  "figures/taxTRENDS.png",
   width = 15,
   height = 20,
   units = 'cm',
@@ -322,7 +322,7 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     scale_shape_manual(values = c(16,17)) +
     scale_color_manual(values=c(col0, col1))+
     
-    labs(x = "Year", y = expression(paste("Small copepods (×1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Small copepods (?1000 m" ^ "-3", ")"))) +
     
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +

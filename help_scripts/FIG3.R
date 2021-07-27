@@ -2,7 +2,7 @@
 
 
 png(
-  "~/nonSU/CPR/IA.png",
+  "figures/IA.png",
   width = 8.5,
   height = 24,
   units = 'cm',

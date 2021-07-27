@@ -78,7 +78,7 @@ for (loc in locations) {
             
             # set up plot
             png(
-              paste0(wd, "/interpEX.png"),
+              "figures/interpEX.png",
               width = 15,
               height = 10,
               units = 'cm',
