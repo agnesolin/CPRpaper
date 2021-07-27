@@ -4,6 +4,7 @@
 
 # Agnes Olin agnes.olin@su.se
 # 21 July 2021
+# R version 4.1.0
 
 #### initial setup ####
 
@@ -14,7 +15,8 @@ library(ggplot2)
 library(ggpubr) 
 library(lubridate) 
 library(mgcv) 
-library(raster) 
+library(raster)
+library(renv)
 library(rworldmap) 
 library(rworldxtra) 
 library(scales) 
@@ -23,6 +25,7 @@ library(sp)
 library(suncalc) 
 library(viridisLite) 
 
+renv::restore() # managing package versions
 
 options(scipen = 999)
 par(family = "serif")
