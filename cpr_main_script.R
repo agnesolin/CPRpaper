@@ -31,6 +31,13 @@ options(scipen = 999)
 par(family = "serif")
 
 
+#### data ####
+
+# CPR data that can be found at https://doi.org/10.17031/1673
+# stonehaven data can be found at https://data.marine.gov.scot/dataset/scottish-coastal-observatory-stonehaven-site (Marine Scotland Science)
+# for L4 data see https://www.westernchannelobservatory.org.uk/l4_zooplankton.php 
+
+
 #### load and clean up data ####
 
 ## load CPR data ##
