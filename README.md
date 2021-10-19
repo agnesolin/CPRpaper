@@ -1,8 +1,8 @@
 # CPRpaper
 
-Code and data to reproduce analysis in the manuscript "Spatio-temporal variation in food conditions for lesser sandeels: species and community trait patterns from the Continuous Plankton Recorder in the north-east Atlantic".
+Code and data to reproduce analysis in the manuscript "Spatio-temporal variation in the zooplankton prey of lesser sandeels: species and community trait patterns from the Continuous Plankton Recorder".
 
-cpr_main_script.R is the main script, which calls additional scripts in "help_scripts" to reproduce the analysis. Data files are stored in "data" and the figures created are stored in "figures".
+cpr_main_script.R is the main script, which calls additional scripts in "help_scripts" to reproduce the analysis. The figures created are stored in "figures".
 
 The Stonehaven data are publicly available: https://data.marine.gov.scot/dataset/scottish-coastal-observatory-stonehaven-site
 
