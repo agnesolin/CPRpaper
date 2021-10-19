@@ -10,5 +10,5 @@ CPR data: https://doi.org/10.17031/1673
 Note that empty cells indicate that the taxon was not found whereas zeroes indicate that some remnants were found. 
 For making requests for CPR data see: https://www.cprsurvey.org/data/data-request-form/
 
-The L4 data are not publicly available, but information on how to access them can be found here:
+Information on how to access the L4 data can be found here:
 https://www.westernchannelobservatory.org.uk/l4_zooplankton.php
