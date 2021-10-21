@@ -16,8 +16,9 @@ png(
 
 # all cases where a trend was identified
 cases = data.frame(
-  loc = c("Shetland", "FoF", "FoF", "DB", "DB"),
+  loc = c("Shetland", "Shetland","FoF", "FoF", "DB", "DB"),
   plot_locs = c(
+    "Shetland",
     "Shetland",
     "Firth of Forth",
     "Firth of Forth",
@@ -26,17 +27,20 @@ cases = data.frame(
     
     
   ),
-  age = c(1, 1, 0, 1, 0),
+  age = c(1, 0, 1, 0, 1, 0),
   median = c(
-    0.3707384, #Shetland 1
     
-    0.3648947, # FoF 1
+    0.3770654, #Shetland 1
     
-    0.3909782,  # FoF 0
+    0.3757770, # Shetland 0
     
-    0.3299747, # Dogger Bank 1
+    0.3662743, # FoF 1
     
-    0.3419371 # Dogger Bank 0
+    0.3870878,  # FoF 0
+    
+    0.3324921, # Dogger Bank 1
+    
+    0.3445700 # Dogger Bank 0
     )
 ) # predictions from model
 
@@ -121,7 +125,7 @@ for (i in 1:nrow(cases)) {
   fig = ggplot(data = abuSMALL, aes(x=year, y=abu_small/1000, colour = age, shape = age)) +
     
     xlim(1958, 2018) +
-    ylim(-(maxVALUE/7), maxVALUE) +
+    ylim(-(maxVALUE/7), maxVALUE+0.5  ) +
     
     scale_x_continuous(name = "Year", breaks = c(1970,1990,2010), labels = c("1970","1990","2010")) +
     
@@ -130,7 +134,7 @@ for (i in 1:nrow(cases)) {
     
     geom_point(size = 1) +
     
-    labs(x = "Year", y = expression(paste("Abundance (?1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Abundance (×1000 m" ^ "-3", ")"))) +
     
     theme_bw(base_size = 10) +
     theme(panel.border = 
@@ -139,7 +143,8 @@ for (i in 1:nrow(cases)) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif")) + 
+          text=element_text(family="serif"),
+          axis.title = element_text(size = 8)) + 
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
     guides(colour = guide_legend(override.aes = list(size = 1.5))) +
@@ -149,12 +154,12 @@ for (i in 1:nrow(cases)) {
   # fit gams
   y = abuSMALL$abu_small / 1000
   x = abuSMALL$year
-  gam.mod = gam(y ~ s(x))
+  gam.mod = gam(y ~ s(x), method = "REML", family = Gamma(link = "log"))
   
   
   # check gam
   summary(gam.mod)
-  par(mfrow = c(2,2)); gam.check(gam.mod0)
+  par(mfrow = c(2,2)); gam.check(gam.mod)
   
   
   # if p < 0.05, add line with prediction intervals
@@ -168,8 +173,10 @@ for (i in 1:nrow(cases)) {
     )
     p$year = min(x, na.rm = T):max(x, na.rm = T)
     p = as.data.frame(p)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     abuSMALL = merge(abuSMALL, p, by = c("year"))
     
@@ -185,6 +192,7 @@ for (i in 1:nrow(cases)) {
   if(i == 3)  fig3small = fig
   if(i == 4)  fig4small = fig
   if(i == 5)  fig5small = fig
+  if(i == 6)  fig6small = fig
   
   
   
@@ -195,7 +203,7 @@ for (i in 1:nrow(cases)) {
   fig =  ggplot(data = abuLARGE, aes(x=year, y=abu_large/1000, colour = age, shape = age)) +
     
     xlim(1958, 2018) +
-    ylim(-(maxVALUE/7), maxVALUE) +
+    ylim(-(maxVALUE/7), maxVALUE+0.5  ) +
     
     scale_x_continuous(name = "Year", breaks = c(1970,1990,2010), labels = c("1970","1990","2010")) +
     
@@ -204,7 +212,7 @@ for (i in 1:nrow(cases)) {
     
     geom_point(size = 1) +
     
-    labs(x = "Year", y = expression(paste("Abundance (?1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Abundance (×1000 m" ^ "-3", ")"))) +
     
     theme_bw(base_size = 10) +
     theme(panel.border = 
@@ -213,7 +221,8 @@ for (i in 1:nrow(cases)) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif")) + 
+          text=element_text(family="serif"),
+          axis.title = element_text(size = 8)) + 
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
     guides(colour = guide_legend(override.aes = list(size = 1.5))) +
@@ -223,12 +232,12 @@ for (i in 1:nrow(cases)) {
   # fit gam mod
   y = abuLARGE$abu_large / 1000
   x = abuLARGE$year
-  gam.mod = gam(y ~ s(x))
+  gam.mod = gam(y ~ s(x), method = "REML", family = Gamma(link = "log"))
   
   
   # check gam
   summary(gam.mod)
-  par(mfrow = c(2,2)); gam.check(gam.mod0)
+  par(mfrow = c(2,2)); gam.check(gam.mod)
   
   
   # if p < 0.05, add line with prediction intervals
@@ -242,8 +251,10 @@ for (i in 1:nrow(cases)) {
     )
     p$year = min(x):max(x)
     p = as.data.frame(p)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     abuLARGE = merge(abuLARGE, p, by = c("year"))
     
@@ -259,6 +270,7 @@ for (i in 1:nrow(cases)) {
   if(i == 3)  fig3large  = fig
   if(i == 4)  fig4large  = fig
   if(i == 5)  fig5large  = fig
+  if(i == 6)  fig6large  = fig
   
   
   
@@ -274,15 +286,16 @@ print(
             fig3small, fig3large,
             fig4small, fig4large,
             fig5small, fig5large,
+            fig6small, fig6large,
             ncol = 2,
-            nrow = 5,
+            nrow = 6,
             common.legend = TRUE,
             legend = "bottom",
-            labels = c("a.", "b.", "c.", "d.", "e.", "f.", "g.", "h.", "i.", "j."),
+            labels = c("a.", "b.", "c.", "d.", "e.", "f.", "g.", "h.", "i.", "j.", "k.", "l."),
             font.label = list(size = 15, family = "serif", face = "plain"),
-            heights = c(1.1, 1, 1, 1, 1),
+            heights = c(1.1, 1, 1, 1, 1, 1),
             label.x = 0.84,
-            label.y = c(0.83, 0.83, rep(0.97,8))
+            label.y = c(0.83, 0.83, rep(0.97,10))
   )
 )
 
@@ -527,7 +540,7 @@ for (loc in c("Iceland", "Faroes")) {
     scale_shape_manual(values = c(16,17)) +
     scale_color_manual(values=c(col0, col1))+
     
-    labs(x = "Year", y = expression(paste("Small copepods (?1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Small copepods (×1000 m" ^ "-3", ")"))) +
     
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
@@ -596,7 +609,7 @@ plot(
   pch = 16,
   col = alpha("grey", 0.1),
   xlab = "Day of year",
-  ylab = expression(paste("Small copepods (?1000 m" ^ "-3", ")")),
+  ylab = expression(paste("Small copepods (×1000 m" ^ "-3", ")")),
   cex.lab =  1.2,
   cex.axis = 1.2
 )
@@ -631,7 +644,7 @@ plot(
   pch = 16,
   col = alpha("grey", 0.1),
   xlab = "Day of year",
-  ylab = expression(paste("Small copepods (?1000 m" ^ "-3", ")")),
+  ylab = expression(paste("Small copepods (×1000 m" ^ "-3", ")")),
   cex.lab =  1.2,
   cex.axis = 1.2
 )
@@ -656,86 +669,4 @@ legend("topright", "b.", cex = 2, bty = "n")
 
 
 dev.off()
-
-
-#### CALANUS PHENOLOGY ####
-
-png(
-  "figures/phenCAL.png",
-  width = 12,
-  height = 6,
-  units = 'cm',
-  res = 200,
-  pointsize = 9,
-  family = "serif"
-)
-
-par(mfrow = c(1, 2), mar = c(4, 5, 1, 1))
-
-# plot Cal i-iv in ECG against day
-plot(
-  df_full$doy[df_full$location == "ECG"],
-  df_full$Calanus.I.IV[df_full$location == "ECG"],
-  pch = 16,
-  col = alpha("grey", 0.1),
-  xlab = "Day of year",
-  ylab = expression(italic("Calanus") ~ "I-IV" ~ m ^ -3),
-  cex.lab =  1.5,
-  cex.axis = 1.5
-)
-
-# line of means
-lines(aggregate(df_full$Calanus.I.IV[df_full$location == "ECG"], list(df_full$doy[df_full$location == "ECG"]), mean),
-      lwd = 3,
-      col = "grey45")
-
-# indicate extent of feeding season
-abline(v = c(start1, end1),
-       col = viridis(10)[5],
-       lwd = 2)
-abline(v = c(start0, end0),
-       col = "goldenrod2",
-       lwd = 2)
-
-legend("topright", "a.", cex = 2, bty = "n")
-
-
-
-# plot Cal fin in ECG against day
-plot(
-  df_full$doy[df_full$location == "ECG"],
-  df_full$Calanus.finmarchicus[df_full$location == "ECG"],
-  pch = 16,
-  col = alpha("grey", 0.1),
-  xlab = "Day of year",
-  ylab = expression(italic("Calanus finmarchicus") ~ m ^ -3),
-  cex.lab =  1.5,
-  cex.axis = 1.5
-)
-
-# lines of mean values
-lines(
-  aggregate(df_full$Calanus.finmarchicus[df_full$location == "ECG"], list(df_full$doy[df_full$location == "ECG"]), mean),
-  lwd = 3,
-  col = "grey45"
-)
-
-# indicate extent of feeding season
-abline(v = c(start1, end1),
-       col = viridis(10)[5],
-       lwd = 2)
-abline(v = c(start0, end0),
-       col = "goldenrod2",
-       lwd = 2)
-
-legend("topright", "b.", cex = 2, bty = "n")
-
-
-
-dev.off()
-
-
-
-
-
 

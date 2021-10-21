@@ -624,7 +624,7 @@ View(prey_info[,c("taxa", "size", "weight", "energy_density", "image_area")])
 
 # gam results
 gamRES[,c("DB", "FoF", "ECG", "Shetland")] = 
-  round(gamRES[,c("DB", "FoF", "ECG", "Shetland")], digits = 2)
+  round(gamRES[,c("DB", "FoF", "ECG", "Shetland")], digits = 4)
 
 View(gamRES)
 

@@ -29,6 +29,7 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   age0$season = as.factor(0)
   
   both = rbind(age0, age1)
+  both_orig = both
   
   # make scatter plot
   fig = ggplot(data = both, aes(x=year, y=mean, shape=season, color=season)) +
@@ -59,7 +60,7 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # fit gams
-  gam.mod = gam(mean ~ season + s(year, by = season), data = both)
+  gam.mod = gam(mean ~ season + s(year, by = season), data = both, method = "REML",family = Gamma(link = "log"))
   summary(gam.mod)
   
   
@@ -76,11 +77,11 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
       "p-value"]
   
   # check gams
-  gam.mod0 = gam(y[x2 == 0] ~ s(x1[x2 == 0]), method = "REML")
+  gam.mod0 = gam(mean ~ s(year), data = both[both$season == 0,], method = "REML",family = Gamma(link = "log"))
   summary(gam.mod0)
   #par(mfrow = c(2,2)); gam.check(gam.mod0)
   
-  gam.mod1 = gam(y[x2 == 1] ~ s(x1[x2 == 1]), method = "REML")
+  gam.mod1 = gam(mean ~ s(year), data = both[both$season == 1,], method = "REML",family = Gamma(link = "log"))
   summary(gam.mod1)
   #par(mfrow = c(2,2)); gam.check(gam.mod1)
   
@@ -97,8 +98,9 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(0)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
     
     both_orig = both
     both = merge(both, p, by = c("year", "season"))
@@ -123,8 +125,9 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(1)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
     
     both = merge(both_orig, p, by = c("year", "season"))
     

@@ -62,9 +62,7 @@ png(
 
 
 for (l in c("Shetland", "ECG", "FoF", "DB")) {
-  
 
-  
   #### column 1 ####
   
   locsub = df[df$loc == l,]
@@ -95,13 +93,13 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     0
   )))))
   both$season = as.factor(both$season)
-  
+  both_orig = both
   
   ## basic scatter plot ##
   figE = ggplot(data = both, aes(x=year, y=mean, shape=season, color=season)) +
     
     xlim(1958, 2018) +
-    ylim(0, 7.5) +
+    ylim(0, 8.5) +
     
     scale_x_continuous(name = "Year", breaks = c(1970,1990,2010), labels = c("1970","1990","2010")) +
     
@@ -127,7 +125,7 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
   x1 = as.numeric(both$year)
   x2 = as.factor(both$season)
   
-  gam.mod = gam(y ~ x2 + s(x1, by = x2))
+  gam.mod = gam(y ~ x2 + s(x1, by = x2), method = "REML", family = Gamma(link = "log"))
   
   # save info on p-values for table
   gamsum = summary(gam.mod)
@@ -143,11 +141,11 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # check gam mods
-  gam.mod0 = gam(y[x2 == 0] ~ s(x1[x2 == 0]))
+  gam.mod0 = gam(y[x2 == 0] ~ s(x1[x2 == 0]), method = "REML", family = Gamma(link = "log"))
   summary(gam.mod0)
   #par(mfrow = c(2,2)); gam.check(gam.mod0)
   
-  gam.mod1 = gam(y[x2 == 1] ~ s(x1[x2 == 1]))
+  gam.mod1 = gam(y[x2 == 1] ~ s(x1[x2 == 1]), method = "REML", family = Gamma(link = "log"))
   summary(gam.mod1)
   #par(mfrow = c(2,2)); gam.check(gam.mod1)
   
@@ -164,8 +162,10 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(x1):max(x1)
     p = as.data.frame(p)
     p$season = factor(0, levels =c(0,1))
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     both_orig = both
     both = merge(both, p, by = c("year", "season"))
@@ -194,8 +194,10 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(x1):max(x1)
     p = as.data.frame(p)
     p$season = factor(1, levels = c(0,1))
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     both = merge(both_orig, p, by = c("year", "season"))
    
@@ -260,7 +262,7 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # fit gams
-  gam.mod = gam(ratio ~ season + s(year, by = season), data = allSUB)
+  gam.mod = gam(ratio ~ season + s(year, by = season), data = allSUB, method = "REML", family = betar(link = "logit"))
   summary(gam.mod)
   
   # save p-values
@@ -277,11 +279,11 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # check gams
-  gam.mod0 = gam(ratio ~ s(year), data = allSUB)
+  gam.mod0 = gam(ratio ~ s(year), data = allSUB[allSUB$season == 0,], method = "REML", family = betar(link = "logit"))
   summary(gam.mod0)
   #par(mfrow = c(2,2)); gam.check(gam.mod0)
   
-  gam.mod1 = gam(ratio ~ s(year), data = allSUB)
+  gam.mod1 = gam(ratio ~ s(year), data = allSUB[allSUB$season == 1,], method = "REML", family = betar(link = "logit"))
   summary(gam.mod1)
   #par(mfrow = c(2,2)); gam.check(gam.mod1)
   
@@ -296,8 +298,9 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(allSUB$year):max(allSUB$year)
     p = as.data.frame(p)
     p$season = factor(0, levels = c(0,1))
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
     
     allSUB_orig = allSUB
     allSUB = merge(allSUB, p, by = c("year", "season"))
@@ -328,8 +331,10 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(allSUB$year):max(allSUB$year)
     p = as.data.frame(p)
     p$season = factor(1, levels = c(0,1))
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     allSUB = merge(allSUB_orig, p, by = c("year", "season"))
     
@@ -428,21 +433,22 @@ print(
             labels = c("a.", "b.", "c.", "d.", "e.", "f.", "g.", "h.", "i.", "j.", "k.", "l."),
             font.label = list(size = 15, family = "serif", face = "plain"),
             label.x = c(
+              0.075,
               0.085,
-              0.095,
-              0.11,
-              0.085,
-              0.095,
-              0.13,
-              0.085,
-              0.093,
-              0.13,
               0.12,
-              0.093,
-              0.13
+              0.075,
+              0.085,
+              0.12,
+              0.075,
+              0.083,
+              0.12,
+              0.11,
+              0.083,
+              0.12
               
               
             ),
+            label.y = 1.04,
             common.legend = FALSE,
             heights = c(1,1,1,1.3))
 )

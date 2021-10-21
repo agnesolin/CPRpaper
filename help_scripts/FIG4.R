@@ -37,8 +37,8 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   # create scatter plot
   fig = ggplot(data = both, aes(x=year, y=mean, shape=season, color=season)) +
     
-    xlim(1958, 2018) +
-    ylim(0, 1000) +
+   ylim (0, 1000) +
+    xlim (1958, 2018) +
     
     scale_x_continuous(name = "Year", breaks = c(1970,1990,2010), labels = c("1970","1990","2010")) +
     
@@ -63,7 +63,7 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # fit gam mod
-  gam.mod = gam(mean ~ season + s(year, by = season), data = both)
+  gam.mod = gam(mean ~ season + s(year, by = season), data = both[both$mean !=0,], method = "REML",  family = Gamma(link = "log"))
   summary(gam.mod)
   
   
@@ -81,11 +81,11 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # check gam mods
-  gam.mod0 = gam(y[x2 == 0] ~ s(x1[x2 == 0]), method = "REML")
+  gam.mod0 = gam(mean ~ s(year), data =  both[both$season == 0 & both$mean !=0,], method = "REML",  family = Gamma(link = "log"))
   summary(gam.mod0)
   #par(mfrow = c(2,2)); gam.check(gam.mod0)
   
-  gam.mod1 = gam(y[x2 == 1] ~ s(x1[x2 == 1]), method = "REML")
+  gam.mod1 = gam(mean ~ s(year), data =  both[both$season == 1 & both$mean !=0,], method = "REML", family = Gamma(link = "log"))
   summary(gam.mod1)
   #par(mfrow = c(2,2)); gam.check(gam.mod1)
   
@@ -102,11 +102,13 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(0)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     both_orig = both
-    both = merge(both, p, by = c("year", "season"))
+    both = merge(both, p, by = c("year", "season"), all.y = T)
     
     fig = fig +
       geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col0) +
@@ -128,10 +130,12 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(1)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
     
-    both = merge(both_orig, p, by = c("year", "season"))
+    
+    both = merge(both_orig, p, by = c("year", "season"), all.y = TRUE)
     
     fig = fig +
       geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col1) +
@@ -175,8 +179,8 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   # make scatter plot
   fig = ggplot(data = both, aes(x=year, y=mean, shape=season, color=season)) +
     
+    ylim(0, 670) + 
     xlim(1958, 2018) +
-    ylim(0, 550) +
     
     scale_x_continuous(name = "Year", breaks = c(1970,1990,2010), labels = c("1970","1990","2010")) +
     
@@ -201,7 +205,7 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # fit gams
-  gam.mod = gam(mean ~ season + s(year, by = season), data = both)
+  gam.mod = gam(mean ~ season + s(year, by = season), data = both[both$mean !=0,], method = "REML", family = Gamma(link = "log"))
   summary(gam.mod)
   
   
@@ -218,12 +222,13 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
       "p-value"]
   
   
+  
   # check gams
-  gam.mod0 = gam(y[x2 == 0] ~ s(x1[x2 == 0]), method = "REML")
+  gam.mod0 = gam(mean ~ s(year), data =  both[both$mean !=0 & both$season == 0,], method = "REML", family = Gamma(link = "log"))
   summary(gam.mod0)
   #par(mfrow = c(2,2)); gam.check(gam.mod0)
   
-  gam.mod1 = gam(y[x2 == 1] ~ s(x1[x2 == 1]), method = "REML")
+  gam.mod1 = gam(mean ~ s(year), data =  both[both$mean !=0 & both$season == 1,], method = "REML",  family = Gamma(link = "log"))
   summary(gam.mod1)
   #par(mfrow = c(2,2)); gam.check(gam.mod1)
   
@@ -240,11 +245,13 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(0)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     both_orig = both
-    both = merge(both, p, by = c("year", "season"))
+    both = merge(both, p, by = c("year", "season"), all.y = T)
     
     fig = fig +
       geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col0) +
@@ -266,10 +273,12 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(1)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
     
-    both = merge(both_orig, p, by = c("year", "season"))
+    
+    both = merge(both_orig, p, by = c("year", "season"), all.y = TRUE)
     
     fig = fig +
       geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col1) +
@@ -313,8 +322,8 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   # make scatter plot
   fig = ggplot(data = both, aes(x=year, y=mean, shape=season, color=season)) +
     
+    ylim (0, 30) + 
     xlim(1958, 2018) +
-    ylim(0, 30) +
     
     scale_x_continuous(name = "Year", breaks = c(1970,1990,2010), labels = c("1970","1990","2010")) +
     
@@ -322,7 +331,7 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     scale_shape_manual(values = c(16,17)) +
     scale_color_manual(values=c(col0, col1))+
     
-    labs(x = "Year", y = expression(paste("Small copepods (?1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Small copepods (×1000 m" ^ "-3", ")"))) +
     
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
@@ -339,7 +348,7 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # fit gam mod
-  gam.mod = gam(mean ~ season + s(year, by = season), data = both)
+  gam.mod = gam(mean ~ season + s(year, by = season), data = both[both$mean !=0,], method = "REML",  family = Gamma(link = "log"))
   summary(gam.mod)
   
   
@@ -357,11 +366,11 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
   
   
   # check gams
-  gam.mod0 = gam(y[x2 == 0] ~ s(x1[x2 == 0]), method = "REML")
+  gam.mod0 = gam(mean ~ s(year), data =  both[both$season == 0 & both$mean !=0,], method = "REML",  family = Gamma(link = "log"))
   summary(gam.mod0)
   #par(mfrow = c(2,2)); gam.check(gam.mod0)
   
-  gam.mod1 = gam(y[x2 == 1] ~ s(x1[x2 == 1]), method = "REML")
+  gam.mod1 = gam(mean ~ s(year), data =  both[both$season == 1 & both$mean !=0,], method = "REML",  family = Gamma(link = "log"))
   summary(gam.mod1)
   #par(mfrow = c(2,2)); gam.check(gam.mod1)
   
@@ -378,11 +387,13 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(0)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
+    
     
     both_orig = both
-    both = merge(both, p, by = c("year", "season"))
+    both = merge(both, p, by = c("year", "season"), all.y = T)
     
     fig = fig +
       geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col0) +
@@ -404,10 +415,12 @@ for (loc in c("Shetland", "ECG", "FoF", "DB")) {
     p$year = min(both$year):max(both$year)
     p = as.data.frame(p)
     p$season = as.factor(1)
-    p$ymin = p$fit - 1.96 * p$se.fit
-    p$ymax = p$fit + 1.96 * p$se.fit
+    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+    p$fit = gam.mod$family$linkinv(p$fit)
     
-    both = merge(both_orig, p, by = c("year", "season"))
+    
+    both = merge(both_orig, p, by = c("year", "season"), all.y = TRUE)
     
     fig = fig +
       geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col1) +
