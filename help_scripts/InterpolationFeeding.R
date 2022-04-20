@@ -5,6 +5,8 @@
 df = data.frame(matrix(nrow = 0, ncol = length(taxa) + 3))
 names(df) = c("location", "year", "doy", taxa)
 
+# set up data frame to store some info on variability
+var_df = data.frame(taxon = character(), metric = character(), month = numeric(), value = numeric())
 
 # loop through aggregations of sandeel grounds
 for (loc in locations) {
@@ -57,6 +59,19 @@ for (loc in locations) {
         # loop through taxa
         for (t in taxa) {
           
+          # for variability estimates
+          var_df_temp_1 = data.frame(taxon = t, metric = "SS", 
+                                   month = aggregate(cpr_sub[, t], by = list(cpr_sub$month), length)$Group.1,
+                                   value = aggregate(cpr_sub[, t], by = list(cpr_sub$month), length)$x)
+          var_df_temp_2 = data.frame(taxon = t, metric = "mean", 
+                                     month = aggregate(cpr_sub[, t], by = list(cpr_sub$month), mean)$Group.1,
+                                     value = aggregate(cpr_sub[, t], by = list(cpr_sub$month), mean)$x)
+          var_df_temp_3 = data.frame(taxon = t, metric = "sd", 
+                                     month = aggregate(cpr_sub[, t], by = list(cpr_sub$month), sd)$Group.1,
+                                     value = aggregate(cpr_sub[, t], by = list(cpr_sub$month), sd)$x)
+          
+          var_df = rbind(var_df,var_df_temp_1, var_df_temp_2, var_df_temp_3)
+          
           # calculate mean abundances for each monthly sampling period
           aggr = aggregate(cpr_sub[, t], by = list(cpr_sub$month), mean)
           names(aggr) = c("month", "abundance")
@@ -84,7 +99,7 @@ for (loc in locations) {
               units = 'cm',
               res = 200,
               pointsize = 9,
-              family = "serif"
+              family = "sans"
             )
             par(mar = c(5, 5, 2, 2))
             
@@ -154,6 +169,15 @@ for (loc in locations) {
   }
   
 }
+
+
+# calculate mean sample size during feeding season
+mean(var_df$value[var_df$metric == "SS" & var_df$month %in% 3:8])
+sd(var_df$value[var_df$metric == "SS" & var_df$month %in% 3:8])
+
+
+mean(var_df$value[var_df$metric == "sd" & var_df$month %in% 3:8 & var_df$taxon == "Calanus.finmarchicus"])
+mean(var_df$value[var_df$metric == "mean" & var_df$month %in% 3:8 & var_df$taxon == "Calanus.finmarchicus"])
 
 
 

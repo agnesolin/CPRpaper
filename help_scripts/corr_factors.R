@@ -21,13 +21,13 @@ png(
   units = 'cm',
   res = 200,
   pointsize = 9,
-  family = "serif"
+  family = "sans"
 )
 
 par(
   mfrow = c(5, 4),
   mar = c(3, 3, 2, 0.5) + 0.1,
-  family = "serif",
+  family = "sans",
   mgp = c(2, 1, 0)
 )
 
@@ -43,15 +43,12 @@ taxa_names = c(
   "Cirripede larvae",
   "Copepod nauplii",
   "Decapoda larvae",
-  "Euphausiacea",
-  expression(italic("Evadne") ~ "spp."),
   "Fish eggs",
   "Fish larvae",
   "Hyperiidea",
   expression(italic("Metridia lucens")),
   expression(italic("Oithona") ~ "spp."),
   expression(italic("Para-Pseudocalanus") ~ "spp."),
-  expression(italic("Podon") ~ "spp."),
   expression(italic("Temora longicornis"))
 )
 
@@ -135,9 +132,9 @@ for (t in poss_taxa) {
     ylim = c(0, 0.8),
     col = "grey",
     pch = 16,
-    cex.axis = 1.1,
-    cex.main = 1.4,
-    cex.lab = 1.3,
+    cex.axis = 0.8,
+    cex.main = 1.2,
+    cex.lab = 1,
     xlab = "Radius (km)",
     ylab = expression(italic(r))
   )
@@ -501,17 +498,17 @@ poss_taxa = poss_taxa[poss_taxa != "Centropages.spp...Unidentified."]
 png(
   "figures/L4_scale.png",
   width = 15,
-  height = 20,
+  height = 15,
   units = 'cm',
   res = 200,
   pointsize = 9,
-  family = "serif"
+  family = "sans"
 )
 
 par(
-  mfrow = c(5, 4),
+  mfrow = c(4, 4),
   mar = c(3, 3, 2, 0.5) + 0.1,
-  family = "serif",
+  family = "sans",
   mgp = c(2, 1, 0)
 )
 
@@ -525,15 +522,12 @@ taxa_names = c(
   "Cirripede larvae",
   "Copepod nauplii",
   "Decapoda larvae",
-  "Euphausiacea",
-  expression(italic("Evadne") ~ "spp."),
   "Fish eggs",
   "Fish larvae",
   "Hyperiidea",
   expression(italic("Metridia lucens")),
   expression(italic("Oithona") ~ "spp."),
   expression(italic("Para-Pseudocalanus") ~ "spp."),
-  expression(italic("Podon") ~ "spp."),
   expression(italic("Temora longicornis"))
 )
 
@@ -603,9 +597,9 @@ for (t in poss_taxa) {
     ylim = c(0, 0.8),
     col = "grey",
     pch = 16,
-    cex.axis = 1.1,
-    cex.main = 1.4,
-    cex.lab = 1.3,
+    cex.axis = 0.8,
+    cex.main = 1.2,
+    cex.lab = 1,
     xlab = "Radius (km)",
     ylab = expression(italic(r))
   )
@@ -948,7 +942,7 @@ corr_factors$day_final = NA
 corr_factors$night_final = NA
 
 
-## calculate mean if available for both L4 and Stonehaven (apart from krill) ##
+## calculate mean if available for both L4 and Stonehaven ##
 
 
 # Acartia
@@ -1067,18 +1061,6 @@ corr_factors$night_final[corr_factors$taxon == "Decapoda.larvae..Total."] =
 
 
 
-# "Euphausiacea.Total"
-corr_factors[corr_factors$taxon == "Euphausiacea.Total", c("day_final", "night_final")] =
-  c(10, 4)
-
-# Evadne
-corr_factors$day_final[corr_factors$taxon == "Evadne.spp."] =
-  mean(c(corr_factors$day.x[corr_factors$taxon == "Evadne.spp."],
-         corr_factors$day.y[corr_factors$taxon == "Evadne.spp."]))
-
-corr_factors$night_final[corr_factors$taxon == "Evadne.spp."] =
-  mean(c(corr_factors$night.x[corr_factors$taxon == "Evadne.spp."],
-         corr_factors$night.y[corr_factors$taxon == "Evadne.spp."]))
 
 
 # fish eggs
@@ -1138,15 +1120,6 @@ corr_factors$night_final[corr_factors$taxon == "Para.Pseudocalanus.spp."] =
   mean(c(corr_factors$night.x[corr_factors$taxon == "Para.Pseudocalanus.spp."],
          corr_factors$night.y[corr_factors$taxon == "Para.Pseudocalanus.spp."]))
 
-
-# podon
-corr_factors$day_final[corr_factors$taxon == "Podon.spp."] =
-  mean(c(corr_factors$day.x[corr_factors$taxon == "Podon.spp."],
-         corr_factors$day.y[corr_factors$taxon == "Podon.spp."]))
-
-corr_factors$night_final[corr_factors$taxon == "Podon.spp."] =
-  mean(c(corr_factors$night.x[corr_factors$taxon == "Podon.spp."],
-         corr_factors$night.y[corr_factors$taxon == "Podon.spp."]))
 
 # temora
 corr_factors$day_final[corr_factors$taxon == "Temora.longicornis"] =

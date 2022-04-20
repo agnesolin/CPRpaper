@@ -38,10 +38,6 @@ L4_comparison$Copepod.nauplii = L4$Copepod.nauplii
 L4_comparison$Decapoda.larvae..Total. = L4$Total.Decapoda
 
 
-L4_comparison$Euphausiacea.Total = L4$Euphausiid.adult
-
-L4_comparison$Evadne.spp. = L4$Evadne.spp.
-
 L4_comparison$Fish.eggs..Total. = L4$Total.Fish.Eggs
 
 L4_comparison$Fish.larvae = L4$Fish.larvae
@@ -66,7 +62,6 @@ L4_comparison$Para.Pseudocalanus.spp. =   rowSums(cbind(L4$Total.Paracalanus.par
 
 
 
-L4_comparison$Podon.spp. = L4$Podon.spp.
 
 L4_comparison$Temora.longicornis = L4$Total.Temora.longicornis
 

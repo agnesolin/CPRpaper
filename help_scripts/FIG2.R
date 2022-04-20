@@ -4,7 +4,7 @@
 #### calculate energy inside/outside season ####
 
 # calculate total energy for full year
-df_full$total_energy = rowSums(t(t(df_full[, key_taxa]) * prey_info$energy[prey_info$taxa %in% key_taxa]))
+df_full$total_energy = rowSums(t(t(df_full[, taxa]) * prey_info$energy))
 
 # subset to locations with better data
 df_full = df_full[df_full$location %in% c("DB",       "FoF",      "ECG",      "Shetland"), ]
@@ -50,19 +50,9 @@ all = rbind(age1, age0)
 
 #### FIG 2 ####
 
-png(
-  "figures/EnergyPhenology.png",
-  width = 15,
-  height = 20,
-  units = 'cm',
-  res = 200,
-  pointsize = 9,
-  family = "serif"
-)
-
 
 for (l in c("Shetland", "ECG", "FoF", "DB")) {
-
+  
   #### column 1 ####
   
   locsub = df[df$loc == l,]
@@ -99,7 +89,7 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
   figE = ggplot(data = both, aes(x=year, y=mean, shape=season, color=season)) +
     
     xlim(1958, 2018) +
-    ylim(0, 8.5) +
+    ylim(0, 7.5) +
     
     scale_x_continuous(name = "Year", breaks = c(1970,1990,2010), labels = c("1970","1990","2010")) +
     
@@ -109,14 +99,14 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     
     labs(x = "Year", y = expression(Total ~ energy ~ (kJ ~ m ^ -3))) +
     
-    theme_bw(base_size = 10) +
+    theme_bw(base_size = 8) +
     theme(panel.border = 
             element_rect(
               fill = NA,
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   
   
@@ -126,9 +116,42 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
   x2 = as.factor(both$season)
   
   gam.mod = gam(y ~ x2 + s(x1, by = x2), method = "REML", family = Gamma(link = "log"))
+
+  gamsum = summary(gam.mod)
+  
+  
+  # qqplot 
+  qq_data = data.frame(
+    theo_quant = qq.gam(gam.mod),
+    resid =  sort(residuals.gam(gam.mod, type = "deviance"))
+  )
+  
+  qq = ggplot(data = qq_data, aes(x = theo_quant, y = resid)) +
+    geom_segment(aes(x = min(qq_data), y = min(qq_data), xend = max(qq_data), yend = max(qq_data)), colour = "red") +
+    geom_point() +
+    labs(x = "Theoretical quantiles", y = "Deviance residuals", title = "QQ plot of residuals", subtitle = "Method: uniform") +
+    theme_bw(base_size = 7) + theme(text=element_text(family="sans"))
+  
+  
+  # linear predictor vs residuals
+  res_linpred = residuals_linpred_plot(gam.mod) + theme_bw(base_size = 7) + theme(text=element_text(family="sans"))
+  
+  # year vs residuals
+  res_predictor = ggplot() +
+    geom_point(aes(x = x1, y = residuals(gam.mod), group = x2, colour = x2, shape = x2), size = 0.8) +
+    geom_smooth(aes(x = x1, y = residuals(gam.mod), group = x2, colour = x2, fill = x2), method = "loess") +
+    
+    scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
+    scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))+
+    scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))+
+    
+    labs(x = "Year", y = "Deviance residuals", title = "Residuals vs year", subtitle = "") +
+    
+    theme_bw(base_size = 7) + theme(text=element_text(family="sans"))
+  
+  
   
   # save info on p-values for table
-  gamsum = summary(gam.mod)
   gamRES[gamRES$resp == "energy_tot" & gamRES$expl == "age", l] = gamsum$p.pv[2]
   gamRES[gamRES$resp == "energy_tot" & gamRES$expl == "smooth0", l] = 
     gamsum$s.table[
@@ -140,92 +163,87 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
       "p-value"]
   
   
-  # check gam mods
-  gam.mod0 = gam(y[x2 == 0] ~ s(x1[x2 == 0]), method = "REML", family = Gamma(link = "log"))
-  summary(gam.mod0)
-  #par(mfrow = c(2,2)); gam.check(gam.mod0)
-  
-  gam.mod1 = gam(y[x2 == 1] ~ s(x1[x2 == 1]), method = "REML", family = Gamma(link = "log"))
-  summary(gam.mod1)
-  #par(mfrow = c(2,2)); gam.check(gam.mod1)
   
   
-  # if p < 0.05, add line with prediction intervals
-  if (summary(gam.mod)$s.pv[1] < 0.05) {
-    p = predict(
-      gam.mod,
-      data.frame(x1 = min(x1):max(x1), x2 = as.factor(0)),
-      type = "link",
-      se.fit = TRUE
-      
-    )
-    p$year = min(x1):max(x1)
-    p = as.data.frame(p)
-    p$season = factor(0, levels =c(0,1))
-    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
-    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
-    p$fit = gam.mod$family$linkinv(p$fit)
+  p = predict(
+    gam.mod,
+    data.frame(x1 = seq(min(x1), max(x1), 0.1), x2 = as.factor(0)),
+    type = "link",
+    se.fit = TRUE
     
-    
-    both_orig = both
-    both = merge(both, p, by = c("year", "season"))
-    
-    both = rbind(both, # this is done to get a nice legend...
-                 data.frame(
-                   year = 2000,
-                   season = factor(1),
-                   mean = NA, fit = NA, se.fit = NA, ymin = NA, ymax = NA
-                 ))
-    
-    figE = figE +
-      geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col0) +
-      geom_ribbon(data = both, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season),  alpha = .15) + 
-      scale_fill_manual(values=c(col0, col1))
-  }
+  )
+  p$year = seq(min(x1), max(x1), 0.1)
+  p = as.data.frame(p)
+  p$season = factor(0, levels =c(0,1))
+  p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+  p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+  p$fit = gam.mod$family$linkinv(p$fit)
   
   
-  if (summary(gam.mod)$s.pv[2] < 0.05) {
-    p = predict(
-      gam.mod,
-      data.frame(x1 = min(x1):max(x1), x2 = as.factor(1)),
-      type = "link",
-      se.fit = TRUE
-    )
-    p$year = min(x1):max(x1)
-    p = as.data.frame(p)
-    p$season = factor(1, levels = c(0,1))
-    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
-    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
-    p$fit = gam.mod$family$linkinv(p$fit)
-    
-    
-    both = merge(both_orig, p, by = c("year", "season"))
-   
-    both = rbind(both, # this is done to get a nice legend...
-          data.frame(
-            year = 2000,
-            season = factor(0),
-            mean = NA, fit = NA, se.fit = NA, ymin = NA, ymax = NA
-          ))
-    
-    figE = figE +
-      geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col1) +
-      geom_ribbon(data = both, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season),  alpha = .15) + 
-      scale_fill_manual(values=c(col0, col1))
-    
-  }
+  both_orig = both
+  both = merge(both, p, by = c("year", "season"))
+  
+  both = rbind(both, # this is done to get a nice legend...
+               data.frame(
+                 year = 2000,
+                 season = factor(1),
+                 mean = NA, fit = NA, se.fit = NA, ymin = NA, ymax = NA
+               ))
+  
+  figE = figE +
+    geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col0) +
+    geom_ribbon(data = both, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season),  alpha = .15) + 
+    scale_fill_manual(values=c(col0, col1))
+  
+  
+  
+  p = predict(
+    gam.mod,
+    data.frame(x1 = seq(min(x1), max(x1), 0.1), x2 = as.factor(1)),
+    type = "link",
+    se.fit = TRUE
+  )
+  p$year = seq(min(x1), max(x1), 0.1)
+  p = as.data.frame(p)
+  p$season = factor(1, levels = c(0,1))
+  p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+  p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+  p$fit = gam.mod$family$linkinv(p$fit)
+  
+  
+  both = merge(both_orig, p, by = c("year", "season"))
+  
+  both = rbind(both, # this is done to get a nice legend...
+               data.frame(
+                 year = 2000,
+                 season = factor(0),
+                 mean = NA, fit = NA, se.fit = NA, ymin = NA, ymax = NA
+               ))
+  
+  figE = figE +
+    geom_line(data = both, aes(x = year, y = fit), size = 0.8, col = col1) +
+    geom_ribbon(data = both, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season),  alpha = .15) + 
+    scale_fill_manual(values=c(col0, col1))
+  
+  
   
   # save each plot
-  if(l == "Shetland") ShetA = figE + theme(legend.position = "none")
-  if(l == "ECG") ECGA = figE + theme(legend.position = "none")
-  if(l == "FoF") FoFA = figE + theme(legend.position = "none")
+  if(l == "Shetland"){ ShetA = figE + theme(legend.position = "none") 
+  Shet_diag_energy = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("a.", "b.", "c."), font.label = list(size = 15, family = "sans", face = "plain"))}
+  if(l == "ECG"){ ECGA = figE + theme(legend.position = "none")
+  ECG_diag_energy = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("d.", "e.", "f."), font.label = list(size = 15, family = "sans", face = "plain"))
+  }
+  if(l == "FoF"){ FoFA = figE + theme(legend.position = "none")
+  FoF_diag_energy = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("g.", "h.", "i."), font.label = list(size = 15, family = "sans", face = "plain"))
+  }
   if(l == "DB"){ 
     DBA = figE  + # common legend
       scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
       scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
       guides(colour = guide_legend(override.aes = list(size = 1.5))) + 
       scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) +
-      theme(legend.position = "bottom")}
+      theme(legend.position = "bottom")
+    DB_diag_energy = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("j.", "k.", "l."), font.label = list(size = 15, family = "sans", face = "plain"))}
   
   
   
@@ -250,14 +268,14 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     
     labs(x = "Year", y = "Inside/outside season") +
     
-    theme_bw(base_size = 10) +
+    theme_bw(base_size = 8) +
     theme(panel.border = 
             element_rect(
               fill = NA,
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   
   
@@ -277,92 +295,119 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
       substr(rownames(gamsum$s.table), nchar(rownames(gamsum$s.table)),  nchar(rownames(gamsum$s.table))) == 1,
       "p-value"]
   
+  # qqplot 
+  qq_data = data.frame(
+    theo_quant = qq.gam(gam.mod),
+    resid =  sort(residuals.gam(gam.mod, type = "deviance"))
+  )
+
+  qq = ggplot(data = qq_data, aes(x = theo_quant, y = resid)) +
+    geom_segment(aes(x = min(qq_data), y = min(qq_data), xend = max(qq_data), yend = max(qq_data)), colour = "red") +
+    geom_point() +
+    labs(x = "Theoretical quantiles", y = "Deviance residuals", title = "QQ plot of residuals", subtitle = "Method: uniform") +
+    theme_bw(base_size = 7) + theme(text=element_text(family="sans"))
+ 
   
-  # check gams
-  gam.mod0 = gam(ratio ~ s(year), data = allSUB[allSUB$season == 0,], method = "REML", family = betar(link = "logit"))
-  summary(gam.mod0)
-  #par(mfrow = c(2,2)); gam.check(gam.mod0)
+  # linear predictor vs residuals
+  res_linpred = residuals_linpred_plot(gam.mod) + theme_bw(base_size = 7) + theme(text=element_text(family="sans"))
   
-  gam.mod1 = gam(ratio ~ s(year), data = allSUB[allSUB$season == 1,], method = "REML", family = betar(link = "logit"))
-  summary(gam.mod1)
-  #par(mfrow = c(2,2)); gam.check(gam.mod1)
-  
-  
-  # if p < 0.05, add line with prediction intervals
-  if (summary(gam.mod)$s.pv[1] < 0.05) {
-    p = predict(gam.mod,
-                data.frame(year = min(allSUB$year):max(allSUB$year), season = 0),
-                type = "link",
-                se.fit = TRUE)
+  # year vs residuals
+  res_predictor = ggplot(data = allSUB) +
+    geom_point(aes(x = year, y = residuals(gam.mod), group = season, colour = season, shape = season), size = 0.8) +
+    geom_smooth(aes(x = year, y = residuals(gam.mod), group = season, colour = season, fill = season), method = "loess") +
     
-    p$year = min(allSUB$year):max(allSUB$year)
-    p = as.data.frame(p)
-    p$season = factor(0, levels = c(0,1))
-    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
-    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
-    p$fit = gam.mod$family$linkinv(p$fit)
+    scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
+    scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))+
+    scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))+
     
-    allSUB_orig = allSUB
-    allSUB = merge(allSUB, p, by = c("year", "season"))
+    labs(x = "Year", y = "Deviance residuals", title = "Residuals vs year", subtitle = "") +
     
-    allSUB = rbind(allSUB, # this is done to get a nice legend...
+    theme_bw(base_size = 7) + theme(text=element_text(family="sans"))
+  
+  
+  
+  
+  
+  
+  p = predict(gam.mod,
+              data.frame(year = seq(min(allSUB$year), max(allSUB$year), 0.1), season = 0),
+              type = "link",
+              se.fit = TRUE)
+  
+  p$year = seq(min(allSUB$year), max(allSUB$year), 0.1)
+  p = as.data.frame(p)
+  p$season = factor(0, levels = c(0,1))
+  p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+  p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+  p$fit = gam.mod$family$linkinv(p$fit)
+  
+  allSUB_orig = allSUB
+  allSUB = merge(allSUB, p, by = c("year", "season"))
+  
+  allSUB = rbind(allSUB, # this is done to get a nice legend...
                  data.frame(
                    year = 2000,
                    season = factor(1),
                    loc = l,
                    mean = NA, ratio = NA, fit = NA, se.fit = NA, ymin = NA, ymax = NA
                  ))
-    
-    figRAT = figRAT +
-      geom_line(data = allSUB, aes(x = year, y = fit), size = 0.8, col = col0) +
-      geom_ribbon(data = allSUB, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season),  alpha = .15) + 
-      scale_fill_manual(values=c(col0, col1))
-  }
+  
+  figRAT = figRAT +
+    geom_line(data = allSUB, aes(x = year, y = fit), size = 0.8, col = col0) +
+    geom_ribbon(data = allSUB, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season),  alpha = .15) + 
+    scale_fill_manual(values=c(col0, col1))
   
   
   
-  if (summary(gam.mod)$s.pv[2] < 0.05) {
-    p = predict(gam.mod,
-                data.frame(year = min(allSUB$year):max(allSUB$year), season = 1),
-                type = "link",
-                se.fit = TRUE)
-    
-    
-    p$year = min(allSUB$year):max(allSUB$year)
-    p = as.data.frame(p)
-    p$season = factor(1, levels = c(0,1))
-    p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
-    p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
-    p$fit = gam.mod$family$linkinv(p$fit)
-    
-    
-    allSUB = merge(allSUB_orig, p, by = c("year", "season"))
-    
-    allSUB = rbind(allSUB, # this is done to get a nice legend...
-                   data.frame(
-                     year = 2000,
-                     season = factor(0),
-                     loc = l,
-                     mean = NA, ratio = NA, fit = NA, se.fit = NA, ymin = NA, ymax = NA
-                   ))
-    
-    figRAT = figRAT +
-      geom_line(data = allSUB, aes(x = year, y = fit), size = 0.8, col = col1) +
-      geom_ribbon(data = allSUB, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season), alpha = .15) + 
-      scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))
-  }
+  
+  
+  p = predict(gam.mod,
+              data.frame(year = seq(min(allSUB$year), max(allSUB$year), 0.1), season = 1),
+              type = "link",
+              se.fit = TRUE)
+  
+  
+  p$year = seq(min(allSUB$year), max(allSUB$year), 0.1)
+  p = as.data.frame(p)
+  p$season = factor(1, levels = c(0,1))
+  p$ymin = gam.mod$family$linkinv(p$fit - 1.96 * p$se.fit)
+  p$ymax = gam.mod$family$linkinv(p$fit + 1.96 * p$se.fit)
+  p$fit = gam.mod$family$linkinv(p$fit)
+  
+  
+  allSUB = merge(allSUB_orig, p, by = c("year", "season"))
+  
+  allSUB = rbind(allSUB, # this is done to get a nice legend...
+                 data.frame(
+                   year = 2000,
+                   season = factor(0),
+                   loc = l,
+                   mean = NA, ratio = NA, fit = NA, se.fit = NA, ymin = NA, ymax = NA
+                 ))
+  
+  figRAT = figRAT +
+    geom_line(data = allSUB, aes(x = year, y = fit), size = 0.8, col = col1) +
+    geom_ribbon(data = allSUB, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = season), alpha = .15) + 
+    scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))
+  
   
   # save plots
-  if(l == "Shetland") ShetB = figRAT + theme(legend.position = "none")
-  if(l == "ECG") ECGB = figRAT + theme(legend.position = "none")
-  if(l == "FoF") FoFB = figRAT + theme(legend.position = "none")
+  if(l == "Shetland"){ ShetB = figRAT + theme(legend.position = "none") 
+  Shet_diag_prop = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("a.", "b.", "c."), font.label = list(size = 15, family = "sans", face = "plain"))}
+  if(l == "ECG"){ ECGB = figRAT + theme(legend.position = "none")
+  ECG_diag_prop = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("d.", "e.", "f."), font.label = list(size = 15, family = "sans", face = "plain"))
+  }
+  if(l == "FoF"){ FoFB = figRAT + theme(legend.position = "none")
+  FoF_diag_prop = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("g.", "h.", "i."), font.label = list(size = 15, family = "sans", face = "plain"))
+  }
   if(l == "DB"){ 
-    DBB = figRAT  + 
+    DBB = figRAT  + # common legend
       scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
-      scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) + 
+      scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
+      guides(colour = guide_legend(override.aes = list(size = 1.5))) + 
       scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) +
-      guides(colour = guide_legend(override.aes = list(size = 1.5))) +
-      theme(legend.position = "bottom")}
+      theme(legend.position = "bottom")
+    DB_diag_prop = ggarrange(qq,  res_linpred, res_predictor, ncol = 3, nrow = 1, widths = c(1,1,1.26), labels = c("j.", "k.", "l."), font.label = list(size = 15, family = "sans", face = "plain"))}
   
   
   
@@ -397,7 +442,7 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
     
     labs(x = "Year", y = "Day of year") +
     
-    theme_bw(base_size = 10) +
+    theme_bw(base_size = 8) +
     theme(panel.border = 
             element_rect(
               fill = NA,
@@ -406,7 +451,7 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
           panel.grid.minor.x = element_blank(),
           panel.grid.major.y = element_blank(),
           panel.grid.minor.y = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   
   # save plots
@@ -422,6 +467,19 @@ for (l in c("Shetland", "ECG", "FoF", "DB")) {
   
 }
 
+# open plot
+jpeg(
+  "figures/EnergyPhenology.jpeg",
+  width = 17,
+  height = (17/15)*20,
+  units = 'cm',
+  res = 600,
+  pointsize = 9,
+  family = "sans"
+)
+
+
+
 # arrange plots
 print(
   ggarrange(ShetA, ShetB, ShetC, 
@@ -431,26 +489,63 @@ print(
             ncol = 3,
             nrow = 4,
             labels = c("a.", "b.", "c.", "d.", "e.", "f.", "g.", "h.", "i.", "j.", "k.", "l."),
-            font.label = list(size = 15, family = "serif", face = "plain"),
-            label.x = c(
-              0.075,
-              0.085,
-              0.12,
-              0.075,
-              0.085,
-              0.12,
-              0.075,
-              0.083,
-              0.12,
-              0.11,
-              0.083,
-              0.12
-              
-              
-            ),
-            label.y = 1.04,
+            font.label = list(size = 12, family = "sans", face = "plain"),
+             label.x = c(
+               0.05,
+               0.05,
+               0.07,
+               0.05,
+               0.05,
+               0.1,
+               0.05,
+               0.05,
+               0.1,
+               0.1,
+               0.05,
+               0.1
+               
+               
+             ),
+            label.y = 1.02,
             common.legend = FALSE,
             heights = c(1,1,1,1.3))
 )
 
 dev.off()
+
+
+
+# open plot
+jpeg(
+  "figures/DiagPlots_energy.jpeg",
+  width = 15,
+  height = 20,
+  units = 'cm',
+  res = 400,
+  pointsize = 9,
+  family = "sans"
+)
+
+
+ggarrange(Shet_diag_energy, ECG_diag_energy, FoF_diag_energy, DB_diag_energy, ncol = 1, nrow = 4)
+
+dev.off()
+
+
+# open plot
+jpeg(
+  "figures/DiagPlots_prop.jpeg",
+  width = 15,
+  height = 20,
+  units = 'cm',
+  res = 400,
+  pointsize = 9,
+  family = "sans"
+)
+
+
+ggarrange(Shet_diag_prop, ECG_diag_prop, FoF_diag_prop, DB_diag_prop, ncol = 1, nrow = 4)
+
+dev.off()
+
+

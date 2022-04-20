@@ -63,13 +63,6 @@ stonehaven_comparison$Decapoda.larvae..Total. = rowSums(cbind(stonehaven$Decapod
                                                               stonehaven$Nephrops.norvegicus.larva), na.rm = T)
 
 
-stonehaven_comparison$Euphausiacea.Total = rowSums(cbind(stonehaven$Nyctiphanes.couchii.adult,
-                                       stonehaven$Nyctiphanes.couchii.juvenile,
-                                       stonehaven$Thysanoessa.inermis.adult,
-                                       stonehaven$Thysanoessa.longicaudata.adult))
-
-stonehaven_comparison$Evadne.spp. = stonehaven$Evadne.nordmanni
-
 stonehaven_comparison$Fish.eggs..Total. = stonehaven$Pisces.egg
 
 stonehaven_comparison$Fish.larvae = rowSums(cbind(stonehaven$Ammodytidae.larva, 
@@ -112,10 +105,6 @@ stonehaven_comparison$Para.Pseudocalanus.spp.= rowSums(cbind(stonehaven$Paracala
                                                              stonehaven$Para.pseudo.cteno.clausocalanus.C1.5), na.rm = T)
 
 
-
-stonehaven_comparison$Podon.spp. = rowSums(cbind(stonehaven$Podon.spp,
-                                 stonehaven$Podon.leuckartii,
-                                 stonehaven$Podon.intermedius), na.rm = T)
 
 stonehaven_comparison$Temora.longicornis = rowSums(cbind(stonehaven$Temora.longicornis.C5,
                                               stonehaven$Temora.longicornis.C5.F,

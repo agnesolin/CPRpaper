@@ -12,23 +12,27 @@
 library(boot) 
 library(forecast) 
 library(ggplot2) 
-library(ggpubr) 
+library(ggpubr)
+library(gratia)
 library(lubridate) 
-library(mgcv) 
+library(mgcv)
+library(MuMIn)
 library(raster)
 library(renv)
+library(RColorBrewer)
 library(rworldmap) 
 library(rworldxtra) 
 library(scales) 
-library(signal) 
+library(signal)
+library(sjPlot)
 library(sp) 
 library(suncalc) 
 library(viridisLite) 
+library(zoo)
 
-renv::restore() # managing package versions
 
 options(scipen = 999)
-par(family = "serif")
+par(family = "sans")
 
 
 #### data ####
@@ -53,8 +57,11 @@ cpr$Sample_Id = sapply(strsplit(as.character(cpr$Sample_Id), '-'), '[', 1)
 # remove Pseudo (included in Pseudo-Para)
 cpr$Pseudocalanus.spp..adult.Total = NULL
 
-# remove copepod eggs (not eaten)
+# remove copepod eggs, krill and cladocerans as not commonly eaten
 cpr$Copepod.eggs = NULL
+cpr$Podon.spp. = NULL
+cpr$Evadne.spp. = NULL
+cpr$Euphausiacea.Total = NULL
 
 # save taxa names
 taxa = names(cpr)[7:ncol(cpr)]
@@ -121,8 +128,8 @@ dist_lim = 135 # for aggregating data
 start1 = 80
 end1 = 165
 
-start0 = 141
-end0 = 212
+start0 = 150
+end0 = 250
 
 #### MAP OF SAMPLES (FIG 1) #####
 
@@ -138,16 +145,16 @@ L4_long = -4.21666667
 
 
 # set up plot
-png(
-  "figures/sample_map.png",
-  width = 26,
-  height = 13,
+jpeg(
+  "figures/sample_map.jpeg",
+  width = 17,
+  height = 8.5,
   units = 'cm',
-  res = 200,
+  res = 600,
   pointsize = 9,
-  family = "serif"
+  family = "sans"
 )
-par(mfrow = c(1, 2), family = "serif", par(mar = c(4.5, 4.5, 1, 1)))
+par(mfrow = c(1, 2), family = "sans", par(mar = c(4.5, 4.5, 1, 1)))
 
 newmap = getMap(resolution = "high")
 
@@ -163,16 +170,16 @@ plot(
   xaxt = 'n',
   yaxt = 'n',
   ann = FALSE,
-  xlab = "Longitude (?)",
-  ylab = "Latitude (?)",
-  cex.lab = 1.6,
-  cex.axis = 1.3
+  xlab = "Longitude (\u00B0)",
+  ylab = "Latitude (\u00B0)",
+  cex.lab = 1.1,
+  cex.axis = 1
 )
 
 
-axis(1, cex.axis = 1.3)
-axis(2, cex.axis = 1.3)
-box(which = "plot", lwd = 0.5)
+axis(1, cex.axis = 1)
+axis(2, cex.axis = 1)
+box(which = "plot", lwd = 0.7)
 
 
 # calculate distance of CPR samples to Stonehaven
@@ -200,7 +207,7 @@ points(
   cpr$Latitude[cpr$distance1 > max_dist &
                  cpr$distance2 > max_dist],
   col = alpha("#94B59E", 0.1),
-  cex = 0.7,
+  cex = 0.4,
   pch = 16
 )
 
@@ -211,14 +218,14 @@ points(
   cpr$Latitude[cpr$distance1 <= max_dist |
                  cpr$distance2 <= max_dist],
   col = alpha("black", 0.3),
-  cex = 0.7,
+  cex = 0.4,
   pch = 16
 )
 
 cpr$distance1 = NULL
 cpr$distance2 = NULL
 
-legend("bottomright", "a.", cex = 2.8, bty = "n")
+legend("bottomright", "a.", cex = 1.8, bty = "n")
 
 
 ### sandeel sites
@@ -232,15 +239,15 @@ plot(
   xaxt = 'n',
   yaxt = 'n',
   ann = FALSE,
-  xlab = "Longitude (?)",
-  ylab = "Latitude (?)",
-  cex.lab = 1.6,
-  cex.axis = 1.3
+  xlab = "Longitude (\u00B0)",
+  ylab = "Latitude (\u00B0)",
+  cex.lab = 1.1,
+  cex.axis = 1
 )
 
-axis(1, cex.axis = 1.3)
-axis(2, cex.axis = 1.3)
-box(which = "plot", lwd = 0.5)
+axis(1, cex.axis = 1)
+axis(2, cex.axis = 1)
+box(which = "plot", lwd = 0.7)
 
 # loop through and plot out CPR samples for each location + add letters
 i = 1
@@ -259,7 +266,7 @@ for (l in rev(c(2, 1, 4, 3, 5, 6))) {
     cpr$Longitude[cpr$distance <= dist_lim],
     cpr$Latitude[cpr$distance <= dist_lim],
     col = alpha("#94B59E", 0.1),
-    cex = 0.7,
+    cex = 0.4,
     pch = 16
     
   )
@@ -267,12 +274,12 @@ for (l in rev(c(2, 1, 4, 3, 5, 6))) {
   text(loc_sandeels$centre_long[l],
        loc_sandeels$centre_lat[l],
        LETTERS[i],
-       cex = 1.7)
+       cex = 1.1)
   i = i + 1
   
 }
 
-legend("bottomright", "b.", cex = 2.8, bty = "n")
+legend("bottomright", "b.", cex = 1.8, bty = "n")
 
 dev.off()
 
@@ -314,6 +321,7 @@ rm_taxa = rm_taxa[!rm_taxa %in% c(
 
 cpr = cpr[, names(cpr)[!names(cpr)  %in%  rm_taxa]]
 taxa = names(cpr)[7:ncol(cpr)]
+
 
 
 
@@ -393,33 +401,10 @@ prey_info$taxa = gsub("-", ".", as.character(prey_info$taxa))
 prey_info$taxa = gsub("[()]", ".", as.character(prey_info$taxa))
 
 
-# list of most important prey items
-key_taxa = c(
-  "Acartia.spp...unidentified.",
-  "Appendicularia",
-  "Calanus.finmarchicus",
-  "Calanus.helgolandicus",
-  "Calanus.I.IV",
-  "Calanus.V.VI.unidentified",
-  "Centropages.hamatus",
-  "Centropages.spp...Unidentified.",
-  "Centropages.typicus",
-  "Cirripede.larvae..Total.",
-  "Copepod.nauplii",
-  "Decapoda.larvae..Total.",
-  "Evadne.spp.",
-  "Fish.eggs..Total.",
-  "Fish.larvae",
-  "Metridia.lucens",
-  "Oithona.spp.",
-  "Para.Pseudocalanus.spp.",
-  "Podon.spp.",
-  "Temora.longicornis"
-)
 
 
 # calculating total energy per day
-df$total_energy = rowSums(t(t(df[, key_taxa]) * prey_info$energy[prey_info$taxa %in% key_taxa]))
+df$total_energy = rowSums(t(t(df[, taxa]) * prey_info$energy))
 
 # calculating median prey size
 df$image_area_median = apply(
@@ -443,11 +428,11 @@ col0 = "goldenrod2"
 # set up table for GAM p-values
 resp_variables = c("energy_tot", "energyInsideOutside", "size", "cf", "ch", "small_cops")
 
-resp_variables = rep(resp_variables, each = 3)
+resp_variables = rep(resp_variables, each = 2)
 
 gamRES = data.frame(
   resp = resp_variables,
-  expl = rep(c("age", "smooth0", "smooth1"), length.out = length(resp_variables)),
+  expl = rep(c("smooth0", "smooth1"), length.out = length(resp_variables)),
   DB = rep(NA, length(resp_variables)),
   FoF = rep(NA, length(resp_variables)),
   ECG = rep(NA, length(resp_variables)),
@@ -475,8 +460,16 @@ source("help_scripts/FIG4.R")
 
 source("help_scripts/FIG5.R")
 
+#### FIG 7 ####
+
+source("help_scripts/PHENO-fig.R")
 
 #### REPORTED QUANTITIES ####
+
+# save tables with GAM results
+tab_df(gamRES,show.rownames = TRUE, digits = 4,
+       file="gam_p.doc")
+
 
 # mean and stanrdard error values Iceland & Faroes energy & size
 F1 = mean_se(df$total_energy[df$location == "Faroes" &
@@ -535,8 +528,7 @@ aggregate(tot$tot, list(tot$loc), FUN = function(x) mean(x, na.rm = T))
 
 #### SUPPLEMENTARY FIGURES ####
 source("help_scripts/SuppPlots.R")
-
-
+source("help_scripts/PhenologySensitivity.R")
 
 #### VIEW TABLES IN PAPER ####
 
@@ -615,16 +607,4 @@ View(corr_factors[
 ])
 
 
-## prey trait values ##
-prey_info$image_area = signif(prey_info$image_area, digits = 2)
-
-View(prey_info[,c("taxa", "size", "weight", "energy_density", "image_area")])
-
-
-
-# gam results
-gamRES[,c("DB", "FoF", "ECG", "Shetland")] = 
-  round(gamRES[,c("DB", "FoF", "ECG", "Shetland")], digits = 4)
-
-View(gamRES)
 

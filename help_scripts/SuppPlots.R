@@ -11,7 +11,7 @@ png(
   units = 'cm',
   res = 200,
   pointsize = 9,
-  family = "serif"
+  family = "sans"
 )
 
 # all cases where a trend was identified
@@ -30,18 +30,18 @@ cases = data.frame(
   age = c(1, 0, 1, 0, 1, 0),
   median = c(
     
-    0.3770654, #Shetland 1
+    0.3783677 , #Shetland 1
     
-    0.3757770, # Shetland 0
+    0.3549203, # Shetland 0
     
-    0.3662743, # FoF 1
+    0.3341763, # FoF 1
     
-    0.3870878,  # FoF 0
+    0.3631128 ,  # FoF 0
     
-    0.3324921, # Dogger Bank 1
+    0.3341763, # Dogger Bank 1
     
-    0.3445700 # Dogger Bank 0
-    )
+    0.3237083  # Dogger Bank 0
+  )
 ) # predictions from model
 
 # loop through cases
@@ -134,16 +134,16 @@ for (i in 1:nrow(cases)) {
     
     geom_point(size = 1) +
     
-    labs(x = "Year", y = expression(paste("Abundance (×1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Abundance ("  %*%  "1000 m" ^ "-3", ")"))) +
     
-    theme_bw(base_size = 10) +
+    theme_bw(base_size = 8) +
     theme(panel.border = 
             element_rect(
               fill = NA,
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"),
+          text=element_text(family="sans"),
           axis.title = element_text(size = 8)) + 
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
@@ -162,8 +162,8 @@ for (i in 1:nrow(cases)) {
   par(mfrow = c(2,2)); gam.check(gam.mod)
   
   
-  # if p < 0.05, add line with prediction intervals
-  if (summary(gam.mod)$s.pv < 0.05) {
+  #  add line with prediction intervals
+
     p = predict(
       gam.mod,
       data.frame(x = min(x, na.rm = T):max(x, na.rm = T)),
@@ -184,7 +184,7 @@ for (i in 1:nrow(cases)) {
       geom_line(data = abuSMALL, aes(x = year, y = fit), size = 0.8, col = col) +
       geom_ribbon(data = abuSMALL, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = age),  alpha = .15)   + 
       scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))
-  }
+  
   
   # save plots
   if(i == 1)  fig1small = fig + labs(title = "small")
@@ -212,7 +212,7 @@ for (i in 1:nrow(cases)) {
     
     geom_point(size = 1) +
     
-    labs(x = "Year", y = expression(paste("Abundance (×1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Abundance ("  %*%  "1000 m" ^ "-3", ")"))) +
     
     theme_bw(base_size = 10) +
     theme(panel.border = 
@@ -221,7 +221,7 @@ for (i in 1:nrow(cases)) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"),
+          text=element_text(family="sans"),
           axis.title = element_text(size = 8)) + 
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
@@ -240,8 +240,8 @@ for (i in 1:nrow(cases)) {
   par(mfrow = c(2,2)); gam.check(gam.mod)
   
   
-  # if p < 0.05, add line with prediction intervals
-  if (summary(gam.mod)$s.pv < 0.05) {
+  # add line with prediction intervals
+ 
     p = predict(
       gam.mod,
       data.frame(x = min(x):max(x)),
@@ -262,7 +262,7 @@ for (i in 1:nrow(cases)) {
       geom_line(data = abuLARGE, aes(x = year, y = fit), size = 0.8, col = col) +
       geom_ribbon(data = abuLARGE, aes(x = year, ymin = ymin, ymax = ymax, col = NULL, fill = age),  alpha = .15)  + 
       scale_fill_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+"))
-  }
+  
   
   # save plots
   if(i == 1)  fig1large  = fig + labs(title = "large")
@@ -292,7 +292,7 @@ print(
             common.legend = TRUE,
             legend = "bottom",
             labels = c("a.", "b.", "c.", "d.", "e.", "f.", "g.", "h.", "i.", "j.", "k.", "l."),
-            font.label = list(size = 15, family = "serif", face = "plain"),
+            font.label = list(size = 15, family = "sans", face = "plain"),
             heights = c(1.1, 1, 1, 1, 1, 1),
             label.x = 0.84,
             label.y = c(0.83, 0.83, rep(0.97,10))
@@ -314,7 +314,7 @@ png(
   units = 'cm',
   res = 200,
   pointsize = 9,
-  family = "serif"
+  family = "sans"
 )
 
 
@@ -362,7 +362,7 @@ for (loc in c("Iceland", "Faroes")) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   if(loc == "Iceland") Ice_te = fig 
   if(loc == "Faroes") Far_te = fig
@@ -409,7 +409,7 @@ for (loc in c("Iceland", "Faroes")) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   if(loc == "Iceland") Ice_ms = fig 
   if(loc == "Faroes") Far_ms = fig
@@ -458,7 +458,7 @@ for (loc in c("Iceland", "Faroes")) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   if(loc == "Iceland") Ice_cf = fig 
   if(loc == "Faroes") Far_cf = fig
@@ -505,7 +505,7 @@ for (loc in c("Iceland", "Faroes")) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   if(loc == "Iceland") Ice_ch = fig 
   if(loc == "Faroes") Far_ch = fig
@@ -540,7 +540,7 @@ for (loc in c("Iceland", "Faroes")) {
     scale_shape_manual(values = c(16,17)) +
     scale_color_manual(values=c(col0, col1))+
     
-    labs(x = "Year", y = expression(paste("Small copepods (×1000 m" ^ "-3", ")"))) +
+    labs(x = "Year", y = expression(paste("Small copepods ("  %*%  "1000 m" ^ "-3", ")"))) +
     
     scale_color_manual(values=c(col0, col1), name = "Age group", labels = c("0", "1+")) + 
     scale_shape_manual(values = c(16,17), name = "Age group", labels = c("0", "1+")) +
@@ -553,7 +553,7 @@ for (loc in c("Iceland", "Faroes")) {
               size = 1), 
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank(),
-          text=element_text(family="serif"))
+          text=element_text(family="sans"))
   
   if(loc == "Iceland") Ice_sc = fig 
   if(loc == "Faroes") Far_sc = fig
@@ -573,100 +573,10 @@ print(
             common.legend = TRUE,
             legend = "bottom",
             labels = c("a.", "b.", "c.", "d.", "e.", "f.", "g.", "h.", "i.", "j."),
-            font.label = list(size = 13, family = "serif", face = "plain"),
+            font.label = list(size = 13, family = "sans", face = "plain"),
             label.x = 0.88,
             label.y = 0.97)
 )
-
-dev.off()
-
-
-
-#### SMALL COP PHENOLOGY ####
-
-
-
-png(
-  "figures/phenSMALLcop.png",
-  width = 16,
-  height = 8,
-  units = 'cm',
-  res = 200,
-  pointsize = 9,
-  family = "serif"
-)
-
-par(mfrow = c(1, 2), mar = c(4, 5, 1, 1))
-
-## DB ##
-
-# plot small copepods against day in DB for all years
-plot(
-  df_full$doy[df_full$location == "DB"],
-  (
-    df_full$Acartia.spp...unidentified.[df_full$location == "DB"] + df_full$Oithona.spp.[df_full$location == "DB"] + df_full$Para.Pseudocalanus.spp.[df_full$location == "DB"] + df_full$Temora.longicornis[df_full$location == "DB"]
-  ) / 1000,
-  pch = 16,
-  col = alpha("grey", 0.1),
-  xlab = "Day of year",
-  ylab = expression(paste("Small copepods (×1000 m" ^ "-3", ")")),
-  cex.lab =  1.2,
-  cex.axis = 1.2
-)
-
-# plot line for mean values of small copepods per day
-lines(aggregate((
-  df_full$Acartia.spp...unidentified.[df_full$location == "DB"] + df_full$Oithona.spp.[df_full$location == "DB"] + df_full$Para.Pseudocalanus.spp.[df_full$location == "DB"] + df_full$Temora.longicornis[df_full$location == "DB"]
-) / 1000,
-list(df_full$doy[df_full$location == "DB"]),
-mean
-), lwd = 3, col = "grey45")
-
-# vertical lines for extent of feeding season
-abline(v = c(start1, end1),
-       col = viridis(10)[5],
-       lwd = 2)
-abline(v = c(start0, end0),
-       col = "goldenrod2",
-       lwd = 2)
-
-legend("topright", "a.", cex = 2, bty = "n")
-
-
-## FoF ##
-
-# plot small copepods against day in FoF for all years
-plot(
-  df_full$doy[df_full$location == "FoF"],
-  (
-    df_full$Acartia.spp...unidentified.[df_full$location == "FoF"] + df_full$Oithona.spp.[df_full$location == "FoF"] + df_full$Para.Pseudocalanus.spp.[df_full$location == "FoF"] + df_full$Temora.longicornis[df_full$location == "FoF"]
-  ) / 1000,
-  pch = 16,
-  col = alpha("grey", 0.1),
-  xlab = "Day of year",
-  ylab = expression(paste("Small copepods (×1000 m" ^ "-3", ")")),
-  cex.lab =  1.2,
-  cex.axis = 1.2
-)
-
-# plot line for mean values of small copepods per day
-lines(aggregate((
-  df_full$Acartia.spp...unidentified.[df_full$location == "FoF"] + df_full$Oithona.spp.[df_full$location == "FoF"] + df_full$Para.Pseudocalanus.spp.[df_full$location == "FoF"] + df_full$Temora.longicornis[df_full$location == "FoF"]
-) / 1000,
-list(df_full$doy[df_full$location == "FoF"]),
-mean
-), lwd = 3, col = "grey45")
-
-# vertical lines for extent of feeding season
-abline(v = c(start1, end1),
-       col = viridis(10)[5],
-       lwd = 2)
-abline(v = c(start0, end0),
-       col = "goldenrod2",
-       lwd = 2)
-
-legend("topright", "b.", cex = 2, bty = "n")
-
 
 dev.off()
 
