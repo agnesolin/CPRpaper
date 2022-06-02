@@ -1,6 +1,6 @@
 # CPRpaper
 
-Code and data to reproduce analysis in the manuscript "Spatio-temporal variation in the zooplankton prey of lesser sandeels: species and community trait patterns from the Continuous Plankton Recorder".
+Code and data to reproduce analysis in the manuscript "Spatio-temporal variation in the zooplankton prey of lesser sandeels: species and community trait patterns from the Continuous Plankton Recorder" to be published in ICES Journal of Marine Science (doi:10.1093/icesjms/fsac101).
 
 cpr_main_script.R is the main script, which calls additional scripts in "help_scripts" to reproduce the analysis. The figures created are stored in "figures".
 
